@@ -1,0 +1,4 @@
+---
+breitbandmessung:
+  module: breitbandmessung
+  class: Breitbandmessung

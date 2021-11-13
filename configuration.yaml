@@ -1,0 +1,7 @@
+---
+init_commands: []
+python_packages:
+  - selenium
+system_packages:
+  - chromium
+  - chromium-chromedriver
