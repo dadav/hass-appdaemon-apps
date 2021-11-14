@@ -2,3 +2,11 @@
 breitbandmessung:
   module: breitbandmessung
   class: Breitbandmessung
+  thread_duration_warning_threshold: 120
+  interaction_timeout: 60
+  speedtest_timeout: 90
+  screenshots: true
+  screenshots_threshold:
+    download: 30.0
+    upload: 5.0
+    ping: 100
