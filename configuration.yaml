@@ -2,6 +2,7 @@
 init_commands: []
 python_packages:
   - selenium
+  - yfinance
 system_packages:
   - chromium
   - chromium-chromedriver
