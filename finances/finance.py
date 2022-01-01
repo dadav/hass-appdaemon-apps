@@ -34,9 +34,11 @@ class Finance(hass.Hass):
             # self.last_time[sym] = unix_time
             # time = datetime.utcfromtimestamp(unix_time)
 
+            friendly_name = data.get('shortName', sym)
+
             common = {
                 'device_class': 'monetary',
-                'friendly_name': data.get('shortName', sym),
+                'friendly_name': friendly_name,
                 'state_class': 'measurement',
                 'unit_of_measurement': data.get('currencySymbol', '$'),
                 'entity_picture': data.get('logo_url', None),
@@ -48,12 +50,21 @@ class Finance(hass.Hass):
 
             value = data.get('regularMarketPrice', None)
             if value is not None:
-                self.set_state(f'sensor.finance_{nsym}', state=value, attributes={**common})
+                self.set_state(
+                    f'sensor.finance_{nsym}',
+                    state=value,
+                    attributes={**common, 'friendly_name': f'{friendly_name} (price)'})
 
             diff = data.get('regularMarketChange', None)
             if diff is not None:
-                self.set_state(f'sensor.finance_{nsym}_diff', state=diff, attributes={**common, 'icon': 'swap-vertical-circle'})
+                self.set_state(
+                    f'sensor.finance_{nsym}_diff',
+                    state=diff,
+                    attributes={**common, 'friendly_name': f'{friendly_name} (difference)', 'icon': 'mdi:swap-vertical-circle'})
 
             diff_pcent = data.get('regularMarketChangePercent', None)
             if diff_pcent is not None:
-                self.set_state(f'sensor.finance_{nsym}_diff_percent', state=diff_pcent * 100.0, attributes={**common, 'unit_of_measurement': '%', 'icon': 'mdi:percent'})
+                self.set_state(
+                    f'sensor.finance_{nsym}_diff_percent',
+                    state=diff_pcent * 100.0,
+                    attributes={**common, 'friendly_name': f'{friendly_name} (difference in %)', 'unit_of_measurement': '%', 'icon': 'mdi:percent'})
