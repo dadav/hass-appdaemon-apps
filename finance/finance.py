@@ -34,11 +34,12 @@ class Finance(hass.Hass):
             # self.last_time[sym] = unix_time
             # time = datetime.utcfromtimestamp(unix_time)
 
-            friendly_name = data.get('shortName', sym)
+            friendly_name = data.get('longName', sym)
 
             common = {
                 'device_class': 'monetary',
                 'friendly_name': friendly_name,
+                'friendly_name_short': sym,
                 'state_class': 'measurement',
                 'unit_of_measurement': data.get('currencySymbol', '$'),
                 'entity_picture': data.get('logo_url', None),
