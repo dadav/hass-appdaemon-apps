@@ -52,20 +52,20 @@ class Finance(hass.Hass):
             value = data.get('regularMarketPrice', None)
             if value is not None:
                 self.set_state(
-                    f'sensor.finance_{nsym}_value',
+                    f'sensor.finance_{nsym}_price',
                     state=value,
                     attributes={**common, 'friendly_name': f'{friendly_name} (price)'})
 
             diff = data.get('regularMarketChange', None)
             if diff is not None:
                 self.set_state(
-                    f'sensor.finance_{nsym}_diff',
+                    f'sensor.finance_{nsym}_change',
                     state=diff,
-                    attributes={**common, 'friendly_name': f'{friendly_name} (difference)', 'icon': 'mdi:swap-vertical-circle'})
+                    attributes={**common, 'friendly_name': f'{friendly_name} (price change)', 'icon': 'mdi:swap-vertical-circle'})
 
             diff_pcent = data.get('regularMarketChangePercent', None)
             if diff_pcent is not None:
                 self.set_state(
-                    f'sensor.finance_{nsym}_diff_percent',
+                    f'sensor.finance_{nsym}_percent',
                     state=diff_pcent * 100.0,
-                    attributes={**common, 'friendly_name': f'{friendly_name} (difference in %)', 'unit_of_measurement': '%', 'icon': 'mdi:percent'})
+                    attributes={**common, 'friendly_name': f'{friendly_name} (price change in %)', 'unit_of_measurement': '%', 'icon': 'mdi:percent'})
