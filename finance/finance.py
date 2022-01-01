@@ -4,6 +4,10 @@ import yfinance as yf
 # from datetime import datetime
 
 RE_NON_ALPHA = re.compile(r'[\W_]+')
+CURRENCY_TRANS = {
+    'EUR': '€',
+    'USD': '$',
+}
 
 def normalize_sym(old_sym):
     old_sym = old_sym.lower()
@@ -41,7 +45,7 @@ class Finance(hass.Hass):
                 'friendly_name': friendly_name,
                 'friendly_name_short': sym,
                 'state_class': 'measurement',
-                'unit_of_measurement': data.get('currencySymbol', '$'),
+                'unit_of_measurement': CURRENCY_TRANS.get(data.get('currency', 'USD'), '$'),
                 'entity_picture': data.get('logo_url', None),
                 'icon': 'mdi:cash',
                 # 'value_time': time.strftime('%Y-%m-%d %H:%M:%S'),
