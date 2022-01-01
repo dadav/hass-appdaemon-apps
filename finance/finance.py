@@ -52,7 +52,7 @@ class Finance(hass.Hass):
             value = data.get('regularMarketPrice', None)
             if value is not None:
                 self.set_state(
-                    f'sensor.finance_{nsym}',
+                    f'sensor.finance_{nsym}_value',
                     state=value,
                     attributes={**common, 'friendly_name': f'{friendly_name} (price)'})
 
