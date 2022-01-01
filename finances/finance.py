@@ -26,26 +26,34 @@ class Finance(hass.Hass):
 
         for sym, data in tickers.tickers.items():
             data = data.info
-            unix_time = data['regularMarketTime']
 
-            if sym in self.last_time and self.last_time[sym] == unix_time:
-                continue
-
-            self.last_time[sym] = unix_time
-
-            nsym = normalize_sym(sym)
-            diff = data['regularMarketChange']
-            diff_pcent = data['regularMarketChangePercent'] * 100.0
+            # # skip if value has not never date
+            # unix_time = data.get('regularMarketTime', None)
+            # if sym in self.last_time and unix_time is not None and self.last_time[sym] == unix_time:
+            #     continue
+            # self.last_time[sym] = unix_time
             # time = datetime.utcfromtimestamp(unix_time)
 
             common = {
                 'device_class': 'monetary',
-                'friendly_name': data['shortName'],
+                'friendly_name': data.get('shortName', sym),
                 'state_class': 'measurement',
-                'unit_of_measurement': data['currencySymbol'],
-                'entity_picture': data['logo_url'],
+                'unit_of_measurement': data.get('currencySymbol', '$'),
+                'entity_picture': data.get('logo_url', None),
+                'icon': 'mdi:cash',
+                # 'value_time': time.strftime('%Y-%m-%d %H:%M:%S'),
             }
 
-            self.set_state(f'sensor.finance_{nsym}', state=data['regularMarketPrice'], attributes={**common})
-            self.set_state(f'sensor.finance_{nsym}_diff', state=diff, attributes={**common})
-            self.set_state(f'sensor.finance_{nsym}_diff_percent', state=diff_pcent, attributes={**common, 'unit_of_measurement': '%'})
+            nsym = normalize_sym(sym)
+
+            value = data.get('regularMarketPrice', None)
+            if value is not None:
+                self.set_state(f'sensor.finance_{nsym}', state=value, attributes={**common})
+
+            diff = data.get('regularMarketChange', None)
+            if diff is not None:
+                self.set_state(f'sensor.finance_{nsym}_diff', state=diff, attributes={**common, 'icon': 'swap-vertical-circle'})
+
+            diff_pcent = data.get('regularMarketChangePercent', None)
+            if diff_pcent is not None:
+                self.set_state(f'sensor.finance_{nsym}_diff_percent', state=diff_pcent * 100.0, attributes={**common, 'unit_of_measurement': '%', 'icon': 'mdi:percent'})
