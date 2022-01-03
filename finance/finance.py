@@ -20,7 +20,6 @@ class Finance(hass.Hass):
         self.last_time = dict()
         self.register_service("finance/fetch_data", self.fetch_data)
         self.run_every(self.fetch_data, "now", self.args["interval_in_minutes"] * 60)
-        self.fetch_data()
 
     def fetch_data(self, *args, **kwargs):
         symbols = ' '.join(self.args['symbols'])
