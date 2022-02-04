@@ -1,0 +1,9 @@
+---
+stellensuche:
+  module: stellensuche
+  class: Stellensuche
+  lehramt: Sonderpädagogik
+  ort: Stuttgart
+  umkreis: 10
+  fachrichtungen: []
+  interval_in_mins: 15
