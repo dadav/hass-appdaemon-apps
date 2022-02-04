@@ -1,0 +1,7 @@
+---
+finance:
+  module: finance
+  class: Finance
+  interval_in_minutes: 5
+  symbols: []
+

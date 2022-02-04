@@ -1,0 +1,74 @@
+import re
+import appdaemon.plugins.hass.hassapi as hass
+import yfinance as yf
+# from datetime import datetime
+
+RE_NON_ALPHA = re.compile(r'[\W_]+')
+CURRENCY_TRANS = {
+    'EUR': '€',
+    'USD': '$',
+}
+
+def normalize_sym(old_sym):
+    old_sym = old_sym.lower()
+    old_sym = RE_NON_ALPHA.sub('', old_sym)
+    return old_sym
+
+class Finance(hass.Hass):
+    def initialize(self):
+        self.log('Finance started')
+        self.last_time = dict()
+        self.register_service("finance/fetch_data", self.fetch_data)
+        self.run_every(self.fetch_data, "now", self.args["interval_in_minutes"] * 60)
+
+    def fetch_data(self, *args, **kwargs):
+        symbols = ' '.join(self.args['symbols'])
+        self.log('Fetching data for the following symbols: %s', symbols)
+
+        tickers = yf.Tickers(symbols)
+
+        for sym, data in tickers.tickers.items():
+            data = data.info
+
+            # # skip if value has not never date
+            # unix_time = data.get('regularMarketTime', None)
+            # if sym in self.last_time and unix_time is not None and self.last_time[sym] == unix_time:
+            #     continue
+            # self.last_time[sym] = unix_time
+            # time = datetime.utcfromtimestamp(unix_time)
+
+            friendly_name = data.get('longName', sym)
+
+            common = {
+                'device_class': 'monetary',
+                'friendly_name': friendly_name,
+                'friendly_name_short': sym,
+                'state_class': 'measurement',
+                'unit_of_measurement': CURRENCY_TRANS.get(data.get('currency', 'USD'), '$'),
+                'entity_picture': data.get('logo_url', None),
+                'icon': 'mdi:cash',
+                # 'value_time': time.strftime('%Y-%m-%d %H:%M:%S'),
+            }
+
+            nsym = normalize_sym(sym)
+
+            value = data.get('regularMarketPrice', None)
+            if value is not None:
+                self.set_state(
+                    f'sensor.finance_{nsym}_price',
+                    state=value,
+                    attributes={**common, 'friendly_name': f'{friendly_name} (price)'})
+
+            diff = data.get('regularMarketChange', None)
+            if diff is not None:
+                self.set_state(
+                    f'sensor.finance_{nsym}_change',
+                    state=diff,
+                    attributes={**common, 'friendly_name': f'{friendly_name} (price change)', 'icon': 'mdi:swap-vertical-circle'})
+
+            diff_pcent = data.get('regularMarketChangePercent', None)
+            if diff_pcent is not None:
+                self.set_state(
+                    f'sensor.finance_{nsym}_percent',
+                    state=diff_pcent * 100.0,
+                    attributes={**common, 'friendly_name': f'{friendly_name} (price change in %)', 'unit_of_measurement': '%', 'icon': 'mdi:percent'})
