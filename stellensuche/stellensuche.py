@@ -64,7 +64,7 @@ class Stellensuche(hass.Hass):
         fachrichtungen = self.args['fachrichtungen']
         fach_json = get_json_from_url(FACHRICHTUNGEN_DATA_URL)
         for num, fach in enumerate(fachrichtungen, start=1):
-            self.request_data[f"Fach${num}"] = get_value_or_default(fach_json, fach, "")
+            self.request_data[f"Fach{num}"] = get_value_or_default(fach_json, fach, "")
 
     def run_stellensuche(self, *args, **kwargs):
         if self.request_data is None:
@@ -97,40 +97,40 @@ class Stellensuche(hass.Hass):
             fix = '_'
 
             if data['Lehramt'] != '':
-                fix = f'_${data["Lehramt"]}_'
+                fix = f'_{data["Lehramt"]}_'
 
             if data['Ort'] != '':
                 if fix == '_':
-                    fix = f'_${data["Ort"]}_'
+                    fix = f'_{data["Ort"]}_'
                 else:
-                    fix = f'${fix}${data["Ort"]}'
+                    fix = f'{fix}{data["Ort"]}'
 
             if data['Umkreis'] != '':
                 if fix == '_':
-                    fix = f'_${data["Umkreis"]}_'
+                    fix = f'_{data["Umkreis"]}_'
                 else:
-                    fix = f'${fix}${data["Umkreis"]}'
+                    fix = f'{fix}{data["Umkreis"]}'
 
             if data['Fach1'] != '':
                 if fix == '_':
-                    fix = f'_${data["Fach1"]}_'
+                    fix = f'_{data["Fach1"]}_'
                 else:
-                    fix = f'${fix}${data["Fach1"]}'
+                    fix = f'{fix}{data["Fach1"]}'
 
             if data['Fach2'] != '':
                 if fix == '_':
-                    fix = f'_${data["Fach2"]}_'
+                    fix = f'_{data["Fach2"]}_'
                 else:
-                    fix = f'${fix}${data["Fach2"]}'
+                    fix = f'{fix}{data["Fach2"]}'
 
             if data['Fach3'] != '':
                 if fix == '_':
-                    fix = f'_${data["Fach3"]}_'
+                    fix = f'_{data["Fach3"]}_'
                 else:
-                    fix = f'${fix}${data["Fach3"]}'
+                    fix = f'{fix}{data["Fach3"]}'
 
-            stellen = {item['AusschreibungsNummer']: f'${item["Ort"]} (${item["Schulbezeichnung"]})' for item in result['Stellen'] }
+            stellen = {item['AusschreibungsNummer']: f'{item["Ort"]} ({item["Schulbezeichnung"]})' for item in result['Stellen'] }
 
-            self.set_state(f'sensor.stellensuche${fix}total_count',
+            self.set_state(f'sensor.stellensuche{fix}total_count',
                             state=result['TotalCount'],
-                            attributes={'friendly_name': 'Breitbandmessung Ping', 'stellen': stellen})
+                            attributes={'friendly_name': 'Anzahl der Stellen', 'stellen': stellen})
