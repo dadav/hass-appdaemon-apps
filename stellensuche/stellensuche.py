@@ -66,7 +66,7 @@ class Stellensuche(hass.Hass):
         for num, fach in enumerate(fachrichtungen, start=1):
             self.request_data[f"Fach${num}"] = get_value_or_default(fach_json, fach, "")
 
-    def run_stellensuche(self):
+    def run_stellensuche(self, *args, **kwargs):
         if self.request_data is None:
             self.build_request_data()
 
