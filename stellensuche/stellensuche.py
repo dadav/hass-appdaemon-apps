@@ -3,6 +3,7 @@
 import re
 import json
 import requests as r
+import unicodedata
 from bs4 import BeautifulSoup as BS
 import appdaemon.plugins.hass.hassapi as hass
 
@@ -11,10 +12,20 @@ LEHRAMT_DATA_URL = 'https://lobw.kultus-bw.de/lobw/ComboBox/LoadWerte?WerteListe
 ORTE_DATA_URL = 'https://lobw.kultus-bw.de/lobw/ComboBox/LoadWerte?WerteListeValue=0&WgVerfahren=LEIN&WgNummer=76'
 FACHRICHTUNGEN_DATA_URL = 'https://lobw.kultus-bw.de/lobw/ComboBox/LoadWerteStellenFaecher?WerteListeValue=0&WgVerfahren=LEIN&lehramt=SOP'
 
+
+def remove_accents(input_str):
+    """
+    https://stackoverflow.com/a/517974
+    """
+    nfkd_form = unicodedata.normalize('NFKD', input_str)
+    return u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+
+
 def get_json_from_url(url):
     req = r.get(url)
     req.raise_for_status()
     return req.json()
+
 
 def get_value_or_default(data, key, default=None):
     kv = {item['Text']: item['Value'] for item in data['data']}
@@ -30,6 +41,7 @@ def get_value_or_default(data, key, default=None):
             return v
 
     return default
+
 
 class Stellensuche(hass.Hass):
     def initialize(self):
@@ -59,7 +71,7 @@ class Stellensuche(hass.Hass):
             lehramt_json = get_json_from_url(LEHRAMT_DATA_URL)
             self.request_data['Lehramt'] = get_value_or_default(lehramt_json, lehramt, "")
 
-        self.request_data['umkreis'] = self.args['umkreis'] or ""
+        self.request_data['Umkreis'] = self.args['umkreis'] or ""
 
         fachrichtungen = self.args['fachrichtungen']
         fach_json = get_json_from_url(FACHRICHTUNGEN_DATA_URL)
@@ -91,19 +103,25 @@ class Stellensuche(hass.Hass):
             data["__RequestVerificationToken"] = token
             ergebnis = s.post('https://lobw.kultus-bw.de/lobw/Stellen/Ergebnis', data=data)
             ergebnis.raise_for_status()
-            raw_code = re.search(r"let searchModel = '([^']*)';", ergebnis.text).groups()[0]
-            result = json.loads(raw_code.encode('utf-8').decode('unicode-escape'))
+            search = re.search(r"let searchModel = '([^']*)';", ergebnis.text)
+
+            if search is None:
+                result = None
+            else:
+                raw_code = search.groups()[0]
+                result = json.loads(raw_code.encode('utf-8').decode('unicode-escape'))
 
             fix = '_'
 
             if data['Lehramt'] != '':
                 fix = f'_{data["Lehramt"]}_'
 
-            if data['Ort'] != '':
+            if self.args['ort']:
+                clean_ort = remove_accents(self.args['ort'])
                 if fix == '_':
-                    fix = f'_{data["Ort"]}_'
+                    fix = f'_{clean_ort}_'
                 else:
-                    fix = f'{fix}{data["Ort"]}'
+                    fix = f'{fix}{clean_ort}'
 
             if data['Umkreis'] != '':
                 if fix == '_':
@@ -129,8 +147,10 @@ class Stellensuche(hass.Hass):
                 else:
                     fix = f'{fix}{data["Fach3"]}'
 
-            stellen = {item['AusschreibungsNummer']: f'{item["Ort"]} ({item["Schulbezeichnung"]})' for item in result['Stellen'] }
+            total = result['TotalCount'] if result is not None else 0
+
+            stellen = {item['AusschreibungsNummer']: f'{item["Ort"]} ({item["Schulbezeichnung"]})' for item in result['Stellen']} if result is not None else {}
 
             self.set_state(f'sensor.stellensuche{fix}total_count',
-                            state=result['TotalCount'],
+                            state=total,
                             attributes={'friendly_name': 'Anzahl der Stellen', 'stellen': stellen})
